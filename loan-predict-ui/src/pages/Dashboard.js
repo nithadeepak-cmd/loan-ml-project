@@ -10,9 +10,8 @@ import {
   TextField,
   MenuItem,
   Button,
-  Paper
+  Paper,
 } from "@mui/material";
-
 
 function Dashboard() {
   const [formData, setFormData] = useState({
@@ -26,17 +25,33 @@ function Dashboard() {
     LoanAmount: "",
     Loan_Amount_Term: "",
     Credit_History: "",
-    Property_Area: ""
+    Property_Area: "",
   });
-
-  const Alert=React.forwardRef(function Alert(props,ref)
-{return<MuiAlert elevation={6} ref={ref} variant="filled"{...props}/>});
-const [loading,setLoading]=useState(false);
-const[success,setSuccess]=useState({open:false,message:""});
-const[toast,setToast]=useState({open:false,message:"",severity:"success",});
-
+  const initialFormData = {
+    Gender: "",
+    Married: "",
+    Dependents: "",
+    Education: "",
+    Self_Employed: "",
+    ApplicantIncome: "",
+    CoapplicantIncome: "",
+    LoanAmount: "",
+    Loan_Amount_Term: "",
+    Credit_History: "",
+    Property_Area: "",
+  };
+  const Alert = React.forwardRef(function Alert(props, ref) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+  });
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState({ open: false, message: "" });
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const [errors, setErrors] = useState({});
-
+  const [prediction, setPrediction] = useState(null); //posibble values:"Approved", "Rejected"
   // 🔥 VALIDATION FUNCTION
   const validateForm = () => {
     const newErrors = {};
@@ -78,43 +93,58 @@ const[toast,setToast]=useState({open:false,message:"",severity:"success",});
   // 🔥 SUBMIT & API CALL
   const handlePredict = async () => {
     if (!validateForm()) {
-      alert("Please correct errors before submitting.");
+      //alert("Please correct errors before submitting.");
+      setToast({
+        open: true,
+        message: "Please correct errors before submitting.",
+        severity: "error",
+      });
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
       });
 
       const result = await response.json();
       //alert("Loan Status: " + result.Loan_Status);
       //setSuccess({open:true,message:"Loan Status: " + result.Loan_Status})
-      if(result.Loan_Status==="Approved"){
+      if (result.Loan_Status === "Approved") {
+        setPrediction("Approved");
         setToast({
-    open:true,
-    message:"Loan Status:Approved",
-    severity:"success"
-    })
-}
-else{
-    setToast({
-    open:true,
-    message:"Loan Status:Rejected",
-    severity:"error"
-    })
-
-}
+          open: true,
+          message: "Loan Status:Approved",
+          severity: "success",
+        });
+      } else {
+        setPrediction("Rejected");
+        setToast({
+          open: true,
+          message: "Loan Status:Rejected",
+          severity: "error",
+        });
+      }
     } catch (err) {
-      alert("Error: " + err);
+      //alert("Error: " + err);
+      setToast({
+        open: true,
+        message: "Error: " + err,
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
     }
-    finally{setLoading(false);
+  };
 
-    }
+  const handleReset = () => {
+    setFormData(initialFormData);
+    setErrors({});
+    setPrediction(null);
+    setLoading(false);
+    setToast({ open: false, message: "", severity: "success" });
   };
 
   // 🔥 Handle input change
@@ -137,7 +167,6 @@ else{
       {/* FORM CARD */}
       <Paper elevation={3} sx={{ mt: 5, p: 4 }}>
         <Grid container spacing={3}>
-
           {/* LEFT COLUMN */}
           <Grid item xs={12} md={6}>
             <TextField
@@ -251,7 +280,7 @@ else{
             <TextField
               sx={{ mt: 2 }}
               fullWidth
-              label="Loan Term"
+              label="Loan Term (in months)"
               name="Loan_Amount_Term"
               type="number"
               value={formData.Loan_Amount_Term}
@@ -302,26 +331,62 @@ else{
             onClick={handlePredict}
             disabled={loading}
           >
-            {loading?<CircularProgress size={26} color="inherit"/>:
-            "Predict Loan Status"}
+            {loading ? (
+              <CircularProgress size={26} color="inherit" />
+            ) : (
+              "Predict Loan Status"
+            )}
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            size="large"
+            sx={{ ml: 2 }}
+            onClick={handleReset}
+          >
+            Reset
           </Button>
         </Box>
       </Paper>
+      {prediction && (
+        <Box sx={{ mt: 4, textAlign: "center" }}>
+          <paper
+            elevation={4}
+            sx={{
+              p: 3,
+              textAlign: "center",
+              backgroundColor:
+                prediction === "Approved" ? "lightgreen" : "lightcoral",
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: "bold",
+                color: prediction === "Approved" ? "green" : "darkred",
+              }}
+            >
+              {prediction === "Approved"
+                ? "Congratulations! Your loan is Approved."
+                : "We are sorry. Your loan is Rejected."}
+            </Typography>
+          </paper>
+        </Box>
+      )}
       <Snackbar
-      open={toast.open}
-      autoHideDuration={3000}
-      onClose={()=>setToast({...toast,open:false})}
-      anchorOrigin={{vertical:"top",horizontal:"center"}}
+        open={toast.open}
+        autoHideDuration={3000}
+        onClose={() => setToast({ ...toast, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-        onClose={()=>setToast({...toast,open:false})}
-        severity={toast.severity}
-        variant="filled"
-        sx={{width:"100%"}}
+          onClose={() => setToast({ ...toast, open: false })}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
         >
-            {toast.message}
-            </Alert>
-
+          {toast.message}
+        </Alert>
       </Snackbar>
     </Container>
   );
