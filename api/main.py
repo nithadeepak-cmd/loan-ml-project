@@ -63,7 +63,7 @@ def predict_loan_status(data:LoanInput):
             prediction=model.predict(input_array)[0]
             # #Map output
             status_map={1:"Approved",0:"Rejected"}
-            return{"Loan_Status":status_map[prediction]}
+            return{"Loan_Status":status_map[int(prediction)]}
             # result="Approved" if prediction==1 else"Rejected"
             # return{"Loan_Status: ":result}
         except Exception as e:
