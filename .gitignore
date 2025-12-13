@@ -1,0 +1,5 @@
+_pychache_/
+node_modules/
+build/
+.DS_Store
+*.pyc
