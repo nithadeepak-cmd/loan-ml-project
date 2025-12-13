@@ -4,7 +4,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from fastapi.middleware.cors import CORSMiddleware
-
+import os;
 
 app=FastAPI()
 app.add_middleware(
@@ -17,8 +17,11 @@ app.add_middleware(
 
 
 # lode model and encoders
-model=joblib.load("../model-training/loan_model.pkl")
-label_encoders=joblib.load("../model-training/label_encoders.pkl")
+#model=joblib.load("../model-training/loan_model.pkl")
+#label_encoders=joblib.load("../model-training/label_encoders.pkl")
+BASE_DIR=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+model=joblib.load(os.path.join(BASE_DIR,"model-training","loan_model.pkl"))
+label_encoders=joblib.load(os.path.join(BASE_DIR,"model-training","label_encoders.pkl"))
 
 #input schema
 
